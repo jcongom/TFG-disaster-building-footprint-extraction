@@ -1,0 +1,10 @@
+Training completed on: 2025-12-01 15:46:16
+Architecture: unet
+Encoder: mobilenet_v2
+Total epochs: 50
+Best validation IoU: 0.8750
+Final validation IoU: 0.8750
+Final validation F1: 0.9254
+Final validation Precision: 0.9496
+Final validation Recall: 0.9062
+Final validation loss: 0.0368
