@@ -6,6 +6,7 @@
 *.kml
 *.tif
 *.geojson
+!dashboard/**/*.geojson
 geoai/**/*.xml
 
 ### JupyterNotebooks ###

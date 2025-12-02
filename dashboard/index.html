@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Visualizador de la erupción volcánica en La Palma, 2021</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.1/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Istok+Web:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+      html, body { 
+      height: 100%; 
+      margin: 0; 
+      padding: 0; 
+      font-family: 'Istok Web', sans-serif; 
+      }
+      #map { height: calc(100vh - 50px); }
+      .title-bar {
+      height: 50px;
+      line-height: 50px;
+      background-color: #D5FAFF; 
+      color: #000078;
+      text-align: center;
+      font-weight: 700; 
+      font-size: 1.2em;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      }
+      .layer-color-box {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      margin-right: 5px;
+      border: 1px solid #706F6F;
+      vertical-align: middle;
+      opacity: 0.7;
+      }
+      .leaflet-popup-content { font-size: 0.9em; }
+      .leaflet-popup-content h3 { margin-bottom: 5px; font-size: 1.1em; color: #000078; }
+      .leaflet-popup-content strong { color: #706F6F; font-weight: 700; }
+    </style>
+  </head>
+  <body>
+    <div class="title-bar">Visualizador de la Erupción Volcánica en La Palma, 2021</div>
+    <div id="map"></div>
+    <script src="https://unpkg.com/leaflet@1.9.1/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/jcongom/TFG-disaster-building-footprint-extraction@main/dashboard/script/side-by-side.js"></script>
+    <script>
+      const TILE_ATTRIB = '<a href="https://www.grafcan.es/aviso-legal/" target="_blank">GRAFCAN</a>, Ortofotos Express de Canarias';
+      const MAX_ZOOM = 23;
+      
+      const LAYER_CONFIG = [
+        { url: './assets/huellas_2021.geojson', pane: 'left', color: '#38ff90', label: 'Edificios identificados en 2021' },
+        { url: './assets/huellas_2024.geojson', pane: 'right', color: '#73EDFF', label: 'Edificios identificados en 2024' },
+        { url: './assets/huellas_perdidos.geojson', pane: 'right', color: '#FF7D87', label: 'Edificios perdidos en el desastre' }
+      ];
+      
+      const map = L.map('map', { minZoom: 15, maxZoom: MAX_ZOOM }).setView([28.616, -17.899], 18);
+      
+      map.createPane('left');
+      map.createPane('right');
+      
+      const createWMSLayer = (url, pane) => L.tileLayer.wms(url, {
+        layers: "WMS_OrtoExpress",
+        format: "image/jpeg",
+        pane,
+        attribution: TILE_ATTRIB,
+        maxZoom: MAX_ZOOM
+      }).addTo(map);
+      
+      const wms2021_left = createWMSLayer("https://idecan1.grafcan.es/ServicioWMS/Historico/Ortofotos/OrtoExpress_2021?", 'left');
+      const wms2024_right = createWMSLayer("https://idecan1.grafcan.es/ServicioWMS/OrtoExpress?", 'right');
+      
+      const formatValue = (key, value) => {
+        if (['area_m2', 'length_m'].includes(key.toLowerCase()) && !isNaN(parseFloat(value))) {
+          const unit = key.toLowerCase() === 'area_m2' ? ' m²' : ' m';
+          return parseFloat(value).toFixed(2) + unit;
+        }
+        if (key === 'informationSystem' && typeof value === 'string' && value.startsWith('http')) {
+          return `<a href="${value}" target="_blank">${value}</a>`;
+        }
+        return value;
+      };
+      
+      const createPopupContent = (properties) => {
+        let content = '<h3>Datos GeoJSON</h3>';
+        for (const [key, value] of Object.entries(properties)) {
+          content += `<strong>${key}:</strong> ${formatValue(key, value)}<br>`;
+        }
+        return content;
+      };
+      
+      const loadGeoJSONLayer = async ({ url, pane, color }) => {
+        try {
+          const response = await fetch(url);
+          if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+          const data = await response.json();
+          
+          return L.geoJSON(data, {
+            pane,
+            style: { color, weight: 2, opacity: 0.75, fillColor: color, fillOpacity: 0.5 },
+            onEachFeature: (feature, layer) => {
+              if (feature.properties) {
+                layer.bindPopup(createPopupContent(feature.properties));
+              }
+            }
+          }).addTo(map);
+        } catch (error) {
+          console.error(`Error cargando ${url}:`, error);
+          return null;
+        }
+      };
+      
+      (async () => {
+        const [layer1, layer2, layer3] = await Promise.all(LAYER_CONFIG.map(loadGeoJSONLayer));
+      
+        if (layer1) {
+          L.control.layers(
+            {}, 
+            { [`<span class="layer-color-box" style="background:${LAYER_CONFIG[0].color};"></span> ${LAYER_CONFIG[0].label}`]: layer1 },
+            { collapsed: false, position: 'topleft' }
+          ).addTo(map);
+        }
+      
+        if (layer2 || layer3) {
+          const overlays = {};
+          if (layer2) overlays[`<span class="layer-color-box" style="background:${LAYER_CONFIG[1].color};"></span> ${LAYER_CONFIG[1].label}`] = layer2;
+          if (layer3) overlays[`<span class="layer-color-box" style="background:${LAYER_CONFIG[2].color};"></span> ${LAYER_CONFIG[2].label}`] = layer3;
+          
+          L.control.layers(
+            {}, 
+            overlays,
+            { collapsed: false, position: 'topright' }
+          ).addTo(map);
+        }
+      })();
+      
+      L.control.sideBySide(wms2021_left, wms2024_right).addTo(map);
+    </script>
+  </body>
+</html>
+
