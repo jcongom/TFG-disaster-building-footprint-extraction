@@ -1,132 +1,167 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Efectos de la erupción en La Palma, 2021</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.1/dist/leaflet.css">
-<link href="https://fonts.googleapis.com/css2?family=Istok+Web:wght@400;700&display=swap" rel="stylesheet">
-<style>
-  *{margin:0;padding:0;box-sizing:border-box}
-  body{font-family:'Istok Web',sans-serif;height:100vh;display:flex;flex-direction:column}
-  #map{flex:1;background:#ddd}
-  .bar{height:50px;background:#000078;color:#D5FAFF;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.2em;box-shadow:0 2px 4px #0003}
-  .tabs{height:40px;display:flex;background:#D5FAFF;box-shadow:0 1px 2px #0002}
-  .tab{flex:1;display:flex;align-items:center;justify-content:center;font-weight:700;cursor:pointer;color:#D8D8EA;border-bottom:3px solid #D8D8EA;transition:.2s;font-size:.9em}
-  .tab:hover,.tab.active{background:#73EDFF;color:#000078;border-color:#9999C9}
-  .tab.active{border-color:#000078}
-  .box{display:inline-block;width:12px;height:12px;margin-right:5px;border:1px solid #706F6F;vertical-align:middle;opacity:.7}
-  .leaflet-popup-content{font-size:.9em}
-  .leaflet-popup-content h3{margin:0 0 5px;font-size:1.1em;color:#000078}
-  .leaflet-popup-content strong{color:#706F6F}
-  .legend{color:#555;background:#fff;padding:8px;border-radius:4px;box-shadow:0 1px 5px #0006}
-  .legend h4{margin:0 0 5px;font-weight:700}
-  .l-item{display:flex;align-items:center;margin-bottom:2px;font-size:.85em}
-  .l-item i{width:14px;height:14px;margin-right:6px;opacity:.7;border:1px solid #333}
-</style>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Añadir iconos -->
+    <link rel="apple-touch-icon" sizes="180x180" href="./assets/icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="./assets/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="./assets/icons/favicon-16x16.png">
+    <link rel="manifest" href="./assets/icons/site.webmanifest">
+    <title>Efectos de la erupción en La Palma, 2021</title>
+
+    <!-- Cargar el CSS de Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.1/dist/leaflet.css">
+
+    <!-- Cargar la tipografía de la web -->
+    <link href="https://fonts.googleapis.com/css2?family=Istok+Web:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- Definir los estilos (contenedor del mapa, barra de título, popup de atributos, leyenda...) -->
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Istok Web', sans-serif; height: 100vh; display: flex; flex-direction: column; }
+        #map { flex: 1; background: #ddd; }
+        .bar { height: 50px; background: #000078; color: #D5FAFF; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.2em; box-shadow: 0 2px 4px #0003; }
+        .tabs { height: 40px; display: flex; background: #D5FAFF; box-shadow: 0 1px 2px #0002; }
+        .tab { flex: 1; display: flex; align-items: center; justify-content: center; font-weight: 700; cursor: pointer; color: #D8D8EA; border-bottom: 3px solid #D8D8EA; transition: .2s; font-size: .9em; }
+        .tab:hover, .tab.active { background: #73EDFF; color: #9999C9; border-color: #9999C9; }
+        .tab.active { border-color: #000078; color: #000078; }
+        .box { display: inline-block; width: 12px; height: 12px; margin-right: 5px; border: 1px solid #706F6F; vertical-align: middle; opacity: .7; }
+        .leaflet-popup-content { font-size: .9em; }
+        .leaflet-popup-content h3 { margin: 0 0 5px; font-size: 1.1em; color: #000078; }
+        .leaflet-popup-content strong { color: #706F6F; }
+        .legend { color: #555; background: #fff; padding: 8px; border-radius: 4px; box-shadow: 0 1px 5px #0006; }
+        .legend h4 { margin: 0 0 5px; font-weight: 700; }
+        .l-item { display: flex; align-items: center; margin-bottom: 2px; font-size: .85em; }
+        .l-item i { width: 14px; height: 14px; margin-right: 6px; opacity: .7; border: 1px solid #333; }
+    </style>
 </head>
 <body>
-<div class="bar">Efectos de la erupción en La Palma, 2021</div>
-<div class="tabs"><div class="tab active" data-id="0">Antes y después</div><div class="tab" data-id="1">Verificación de daños</div></div>
-<div id="map"></div>
-<script src="https://unpkg.com/leaflet@1.9.1/dist/leaflet.js"></script>
-<script src="./script/side-by-side.js"></script>
-<script>
-const $ = s => document.querySelector(s);
-const $$ = s => document.querySelectorAll(s);
-const ASSETS = './assets/';
+    <!-- Título de la página -->
+    <div class="bar">Efectos de la erupción en La Palma, 2021</div>
 
-const CFG = {
-  views: [
-    { // Vista de antes y después
-      layers: [
-        {f:'huellas_2021.geojson', p:'left', c:'#38ff90', n:'Edificios identificados en 2021'},
-        {f:'huellas_2024.geojson', p:'right', c:'#FFE000', n:'Edificios identificados en 2024'},
-        {f:'huellas_perdidos.geojson', p:'right', c:'#FF7D87', n:'Edificios perdidos en el desastre'}
-      ]
-    },
-    { // Vista de verificación de daños
-      legend: true,
-      layers: [
-        {f:'huellas_perdidos.geojson', p:'left', c:'#FFE000', n:'Edificios perdidos en el desastre'},
-        {f:'huellas_copernicus.geojson', p:'right', n:'Edificios confirmados por Copernicus', them:'ESM_detected'}
-      ]
-    }
-  ]
-};
+    <!-- Selector de vistas -->
+    <div class="tabs"><div class="tab active" data-id="0">Antes y después</div><div class="tab" data-id="1">Verificación de daños</div></div>
+    <div id="map"></div>
 
-const map = L.map('map',{minZoom:14,maxZoom:21}).setView([28.616,-17.899],18);
-['left','right'].forEach(p => map.createPane(p));
+    <!-- Cargar el script de Leaflet -->
+    <script src="https://unpkg.com/leaflet@1.9.1/dist/leaflet.js"></script>
 
-const wms = (u,p) => L.tileLayer.wms(u,{layers:"WMS_OrtoExpress",format:"image/jpeg",pane:p,attribution:'<a href="https://www.grafcan.es/">GRAFCAN</a>, Ortofotos Express de Canarias',maxZoom:21,zIndex:100}).addTo(map);
-const wms1 = wms("https://idecan1.grafcan.es/ServicioWMS/Historico/Ortofotos/OrtoExpress_2021?",'left');
-const wms2 = wms("https://idecan1.grafcan.es/ServicioWMS/OrtoExpress?",'right');
+    <!-- Cargar el script de syde-by-side modificado -->
+    <script src="./script/side-by-side.js"></script>
+    <script>
+        // Atajos para seleccionar elementos DOM
+        const $ = document.querySelector.bind(document);
+        const $$ = document.querySelectorAll.bind(document);
+        
+        // Definir las fuentes de datos
+        const CFG = {
+            views: [
+                {   // Vista 1: Antes y después del desastre
+                    layers: [
+                        { url: './assets/huellas_2021.geojson', p: 'left', c: '#38ff90', n: 'Edificios identificados en 2021' },
+                        { url: './assets/huellas_2024.geojson', p: 'right', c: '#FFE000', n: 'Edificios identificados en 2024' },
+                        { url: './assets/huellas_perdidos.geojson', p: 'right', c: '#FF7D87', n: 'Edificios perdidos en el desastre', hidden: true }
+                    ]
+                },
+                {   // Vista 2: Comparación con Copernicus
+                    legend: true, // Caja de leyenda para las detecciones
+                    layers: [
+                        { url: './assets/huellas_perdidos.geojson', p: 'left', c: '#FFE000', n: 'Edificios perdidos en el desastre' },
+                        // 'them': atributo booleano caculado para determinar la detección de Copernicus 
+                        { url: './assets/huellas_copernicus.geojson', p: 'right', n: 'Edificios confirmados por Copernicus', them: 'ESM_detected' }
+                    ]
+                }
+            ]
+        };
+        
+        // Inicializar el mapa, centrado en la zona de interés de La Palma
+        const map = L.map('map', { minZoom: 14, maxZoom: 21 }).setView([28.616, -17.899], 18);
 
-const leg = L.control({position:'bottomright'});
-leg.onAdd = () => {
-  const d = L.DomUtil.create('div','legend');
-  // Se añade el enlace a la activación EMSR546
-  d.innerHTML = '<h4>Verificación de la <a href="https://emergency.copernicus.eu/mapping/list-of-components/EMSR546" target="_blank" style="margin-left:4px;color:#000078">activación Copernicus</a></h4><div class="l-item"><i style="background:#38ff90"></i>Presente en EMSR546</div><div class="l-item"><i style="background:#FF7D87"></i>Ausente en EMSR546</div>';
-  return d;
-};
+        // Crear los paneles para su recorte por el swipe (requisito del script modificado)
+        ['left', 'right'].forEach(p => map.createPane(p));
+        
+        // Añadir las capas WMS de ortofotos de La Palma
+        // 'p': panel asignado para el swipe ('left' o 'right')
+        const wms = (u, p) => L.tileLayer.wms(u, { layers: 'WMS_OrtoExpress', format: 'image/jpeg', pane: p, attribution: '<a href="https://www.grafcan.es/aviso-legal/">GRAFCAN</a>, Ortofotos Express de Canarias', maxZoom: 21, zIndex: 100 }).addTo(map);
+        const wms1 = wms('https://idecan1.grafcan.es/ServicioWMS/Historico/Ortofotos/OrtoExpress_2021?', 'left');
+        const wms2 = wms('https://idecan1.grafcan.es/ServicioWMS/OrtoExpress?', 'right');
+        
+        // Leyenda para la vista de comparación con Copernicus
+        const leg = L.control({ position: 'bottomright' });
+        leg.onAdd = () => {
+            const d = L.DomUtil.create('div', 'legend');
+            d.innerHTML = `<h4>Verificación de la <a href="https://emergency.copernicus.eu/mapping/list-of-components/EMSR546" target="_blank" style="margin-left:4px;color:#000078">activación Copernicus</a></h4><div class="l-item"><i style="background:#38ff90"></i>Presente en EMSR546</div><div class="l-item"><i style="background:#FF7D87"></i>Ausente en EMSR546</div>`;
+            return d;
+        };
+        
+        // Array de control de las capas y controles activos, para el cambio de vista
+        let activeLy = [], activeCtl = [];
+        
+        // Formatear los números y unidades extraidos de las huellas de GeoAI
+        const fmt = (k, v) => {
+            if (['area_m2', 'length_m'].includes(k.toLowerCase()) && !isNaN(v)) return parseFloat(v).toFixed(2) + (k[0] === 'a' ? ' ㎡' : ' m');
+            return typeof v === 'string' && v.startsWith('http') ? `<a href="${v}" target="_blank">${v}</a>` : v;
+        };
+        
+        const pop = p => {
+            let h = '<h3>Datos del edificio</h3>';
+            for (let k in p) h += `<strong>${k}</strong> ${fmt(k, p[k])}<br>`;
+            return h;
+        };
+        
+        // Obtener los datos, cargar las capas de huellas a Leaflet y asignar los estilos
+        const load = async cfg => {
+            const res = await fetch(cfg.url);
+            const l = L.geoJSON(await res.json(), {
+                pane: cfg.p,
+                style: f => {
+                    // Si el atributo está presente, usar colores temáticos basados en la detección de Copernicus
+                    const c = cfg.them ? (f.properties[cfg.them] >= 1 ? '#38ff90' : '#FF7D87') : cfg.c;
+                    return { color: c, weight: 2, opacity: .8, fillColor: c, fillOpacity: .6 };
+                },
+                onEachFeature: (f, l) => { if (f.properties) l.bindPopup(pop(f.properties)); }
+            });
 
-let activeLyp = [], activeCtl = [];
+            // Metadatos para la leyenda
+            const ico = cfg.c || 'repeating-linear-gradient(-45deg, #38ff90, #38ff90 5px, #FF7D87 5px, #FF7D87 10px)';
+            return { l, p: cfg.p, n: cfg.n, i: ico, hidden: cfg.hidden };
+        };
+        
+        // Gestionar el cambio al clicar entre las vistas 1 y 2
+        const setView = async idx => {
+            // Paso 1: Limpiar las capas y controles previos
+            activeLy.forEach(l => map.removeLayer(l));
+            activeCtl.forEach(c => map.removeControl(c));
+            activeLy = []; activeCtl = [];
+            
+            // Paso 2: Cargar los nuevos datos
+            const view = CFG.views[idx];
+            const all = await Promise.all(view.layers.map(load));
 
-const fmt = (k,v) => {
-  if(['area_m2','length_m'].includes(k=k.toLowerCase()) && !isNaN(v=parseFloat(v))) return v.toFixed(2)+(k[0]=='a'?' m²':' m');
-  return typeof v=='string' && v.startsWith('http') ? `<a href="${v}" target="_blank">${v}</a>` : v;
-};
+            // Paso 3: Organizar los paneles de capas
+            const groups = { left: {}, right: {} };
+            all.forEach(d => { if (!d.hidden) { d.l.addTo(map).bringToFront() }; activeLy.push(d.l); groups[d.p][`<span class="box" style="background:${d.i}"></span>${d.n}`] = d.l; });
 
-const pop = p => {
-  let h = '<h3>Datos del edificio</h3>';
-  for(let k in p) h += `<strong>${k}:</strong> ${fmt(k,p[k])}<br>`;
-  return h;
-};
+            // Paso 4: Añadir los paneles de capas
+            for (let p in groups) if (Object.keys(groups[p]).length) activeCtl.push(L.control.layers({}, groups[p], { collapsed: false, position: 'top' + p }).addTo(map));
 
-const load = async cfg => {
-  try {
-    const res = await fetch(ASSETS + cfg.f);
-    if(!res.ok) throw 0;
-    const l = L.geoJSON(await res.json(), {
-      pane: cfg.p,
-      style: f => {
-        const c = cfg.them ? (f.properties[cfg.them]>=1 ? '#38ff90':'#FF7D87') : cfg.c;
-        return {color:c,weight:2,opacity:.8,fillColor:c,fillOpacity:.6};
-      },
-      onEachFeature: (f,l) => f.properties && l.bindPopup(pop(f.properties))
-    });
-    const ico = cfg.c || 'repeating-linear-gradient(-45deg,#38ff90,#38ff90 5px,#FF7D87 5px,#FF7D87 10px)';
-    return {l, p:cfg.p, n:cfg.n, i:ico};
-  } catch(e) { console.error(e); return null; }
-};
+            // Paso 5: Añadir la leyenda en la vista 2
+            view.legend ? (!leg._map && leg.addTo(map)) : (leg._map && leg.remove());
 
-const setView = async idx => {
-  activeLyp.forEach(l => map.removeLayer(l));
-  activeCtl.forEach(c => map.removeControl(c));
-  activeLyp=[], activeCtl=[];
+            // Paso 6: Actualizar la pestaña
+            $$('.tab').forEach((t, i) => t.classList.toggle('active', i === idx));
+        };
+        
+        // Inicializar la web con la vista 1
+        (async () => { await setView(0); })();
 
-  const view = CFG.views[idx];
-  const all = (await Promise.all(view.layers.map(load))).filter(x=>x);
-  
-  const groups = {left:{}, right:{}};
-  
-  all.forEach(d => {
-    d.l.addTo(map).bringToFront();
-    activeLyp.push(d.l);
-    groups[d.p][`<span class="box" style="background:${d.i}"></span>${d.n}`] = d.l;
-  });
+        // Detectar los clics en el selector de vistas
+        $$('.tab').forEach((t, i) => t.onclick = () => setView(i));
 
-  for(let p in groups) if(Object.keys(groups[p]).length) 
-    activeCtl.push(L.control.layers({}, groups[p], {collapsed:true, position:`top${p}`}).addTo(map));
-
-  view.legend ? (!leg._map && leg.addTo(map)) : (leg._map && leg.remove());
-  $$('.tab').forEach((t,i) => t.classList.toggle('active', i===idx));
-};
-
-(async()=>{
-  await setView(0);
-  $$('.tab').forEach((t,i) => t.onclick = () => setView(i));
-  L.control.sideBySide(wms1, wms2).addTo(map);
-})();
-</script>
+        // Cargar el módulo de swipe modificado, junto con las capas base WMS
+        L.control.sideBySide(wms1, wms2).addTo(map);
+    </script>
 </body>
 </html>

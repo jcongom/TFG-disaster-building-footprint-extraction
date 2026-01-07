@@ -7,7 +7,7 @@
 *.tif
 *.geojson
 !docs/**/*.geojson
-geoai/**/*.xml
+*.xml
 
 ### JupyterNotebooks ###
 # gitignore template for Jupyter Notebooks

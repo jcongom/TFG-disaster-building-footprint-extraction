@@ -1,0 +1,10 @@
+Training completed on: 2026-01-07 02:28:53
+Architecture: unet
+Encoder: efficientnet-b1
+Total epochs: 50
+Best validation IoU: 0.8773
+Final validation IoU: 0.8576
+Final validation F1: 0.9119
+Final validation Precision: 0.9618
+Final validation Recall: 0.8852
+Final validation loss: 0.0387

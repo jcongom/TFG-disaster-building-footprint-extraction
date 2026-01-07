@@ -7,14 +7,12 @@ require('./range.css')
 var mapWasDragEnabled
 var mapWasTapEnabled
 
-// Leaflet v0.7 backwards compatibility
 function on (el, types, fn, context) {
   types.split(' ').forEach(function (type) {
     L.DomEvent.on(el, type, fn, context)
   })
 }
 
-// Leaflet v0.7 backwards compatibility
 function off (el, types, fn, context) {
   types.split(' ').forEach(function (type) {
     L.DomEvent.off(el, type, fn, context)
@@ -42,20 +40,17 @@ function uncancelMapDrag (e) {
   }
 }
 
-// convert arg to an array - returns empty array if arg is undefined
 function asArray (arg) {
   return (arg === 'undefined') ? [] : Array.isArray(arg) ? arg : [arg]
 }
 
 function noop () {}
 
-// start fix for Leaflet 1.9 -----------------------
 function isTouch() {
   return (('ontouchstart' in window)
       || (navigator.MaxTouchPoints > 0)
       || (navigator.msMaxTouchPoints > 0));    
 }
-// end fix for Leaflet 1.9 -----------------------
 
 L.Control.SideBySide = L.Control.extend({
   options: {
@@ -103,16 +98,10 @@ L.Control.SideBySide = L.Control.extend({
       return this
     }
     if (this._leftLayer) {
-// start fix for Leaflet 1.9 -----------------------
-//      this._leftLayer.getContainer().style.clip = ''
       this._leftLayer.getPane().style.clip = ''
-// end fix for Leaflet 1.9 -----------------------
     }
     if (this._rightLayer) {
-// start fix for Leaflet 1.9 -----------------------
-//      this._rightLayer.getContainer().style.clip = ''
       this._rightLayer.getPane().style.clip = ''
-// end fix for Leaflet 1.9 -----------------------
     }
     this._removeEvents()
     L.DomUtil.remove(this._container)
@@ -146,15 +135,10 @@ L.Control.SideBySide = L.Control.extend({
     var clipLeft = 'rect(' + [nw.y, clipX, se.y, nw.x].join('px,') + 'px)'
     var clipRight = 'rect(' + [nw.y, se.x, se.y, clipX].join('px,') + 'px)'
     if (this._leftLayer) {
-// start fix for Leaflet 1.9 -----------------------
-//      this._leftLayer.getContainer().style.clip = clipLeft
       this._leftLayer.getPane().style.clip = clipLeft
     }
     if (this._rightLayer) {
-// start fix for Leaflet 1.9 -----------------------
-//      this._rightLayer.getContainer().style.clip = clipRight
       this._rightLayer.getPane().style.clip = clipRight
-// end fix for Leaflet 1.9 -----------------------
     }
   },
 
@@ -193,12 +177,8 @@ L.Control.SideBySide = L.Control.extend({
     map.on('move', this._updateClip, this)
     map.on('layeradd layerremove', this._updateLayers, this)
     on(range, getRangeEvent(range), this._updateClip, this)
-// start fix for Leaflet 1.9 -----------------------
-//    on(range, L.Browser.touch ? 'touchstart' : 'mousedown', cancelMapDrag, this)
-//    on(range, L.Browser.touch ? 'touchend' : 'mouseup', uncancelMapDrag, this)
     on(range, isTouch() ? 'touchstart' : 'mousedown', cancelMapDrag, this)
     on(range, isTouch() ? 'touchend' : 'mouseup', uncancelMapDrag, this)
-// end fix for Leaflet 1.9 -----------------------
   },
 
   _removeEvents: function () {
@@ -251,14 +231,12 @@ function injectStyleTag (document, fileName, cb) {
 
 module.exports = function (css, customDocument, fileName) {
   var doc = customDocument || document
-  /* istanbul ignore if: not supported by Electron */
   if (doc.createStyleSheet) {
     var sheet = doc.createStyleSheet()
     sheet.cssText = css
     return sheet.ownerNode
   } else {
     return injectStyleTag(doc, fileName, function (style) {
-      /* istanbul ignore if: not supported by Electron */
       if (style.styleSheet) {
         style.styleSheet.cssText = css
       } else {
@@ -269,7 +247,6 @@ module.exports = function (css, customDocument, fileName) {
 }
 
 module.exports.byUrl = function (url) {
-  /* istanbul ignore if: not supported by Electron */
   if (document.createStyleSheet) {
     return document.createStyleSheet(url).ownerNode
   } else {
